@@ -6,7 +6,9 @@ const geocodingClient = mbxGeocoding({ accessToken: mapToken});
 
 module.exports.index = async (req, res) => {
   let {catagory} =req.query;
-    const allListings = await Listing.find({});
+    const allListings = catagory
+    ? await Listing.find({catagory})
+    : await Listing.find({});
 
     res.render("listings/index", { allListings });
   }
@@ -46,7 +48,10 @@ module.exports.createListing = async (req, res, next) => {
     const newListing = new Listing(req.body.listing);
     newListing.owner = req.user._id;
     newListing.image = {url ,filename};
-
+  if(response.body.features.length === 0){
+  req.flash("error","Location Not found");
+  return res.redirect("/listings/new");
+  }
     newListing.geometry = response.body.features[0].geometry;
 
     let savedListing = await newListing.save();
